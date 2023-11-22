@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  api:
+    image: ghcr.io/nuibits/echoip:main
+    restart: unless-stopped
+    networks:
+      - caddy
+    environment:
+      PORT: 3000
+    deploy:
+      labels:
+        caddy: echoip.com
+        caddy.reverse_proxy: "{{upstreams 3000}}"
+
+networks:
+  caddy:
+    external: true # docker create network -d overlay caddy

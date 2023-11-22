@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -24,12 +25,7 @@ func main() {
 	r.Use(middleware.RealIP)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			log.Printf("Error getting IP: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		ip := getIP(r.RemoteAddr)
 
 		log.Printf("Received request from IP: %s", ip)
 		w.Write([]byte(ip))
@@ -69,4 +65,21 @@ func main() {
 	}
 
 	log.Println("Server exiting")
+}
+
+// getIP extracts the IP address from a given address string
+func getIP(addr string) string {
+	// Split host and port
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		// If split fails, it could be a bare IP address (especially IPv6)
+		if strings.Contains(addr, ":") && !strings.Contains(addr, "[") {
+			// Validate and return the IPv6 address without port
+			if ip := net.ParseIP(addr); ip != nil {
+				return ip.String()
+			}
+		}
+		return addr
+	}
+	return host
 }
