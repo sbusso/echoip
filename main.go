@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -29,6 +30,17 @@ func main() {
 
 		log.Printf("Received request from IP: %s", ip)
 		w.Write([]byte(ip))
+	})
+
+	// Endpoint to echo request headers
+	r.Get("/headers", func(w http.ResponseWriter, r *http.Request) {
+		for name, values := range r.Header {
+			// Loop over all headers
+			for _, value := range values {
+				// Write header to response
+				fmt.Fprintf(w, "%v: %v\n", name, value)
+			}
+		}
 	})
 
 	port := os.Getenv("PORT")
